@@ -1,36 +1,29 @@
-name = inception
+BLUE    := \033[34m
+GREEN   := \033[32m
+YELLOW  := \033[33m
+RED     := \033[31m
+RESET   := \033[0m
 
-all:
-	@printf "Launch configuration ${name}...\n"
-	@bash srcs/requirements/wordpress/tools/make_dir.sh
-	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env up
+all: inception
 
-build:
-	@printf "Building configuration ${name}...\n"
+inception:
+	@echo "${BLUE}Building and starting Inception...${RESET}"
 	@bash srcs/requirements/wordpress/tools/make_dir.sh
-	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env up -d --build
+	@docker-compose -f ./srcs/docker-compose.yml up --build -d
 
 down:
-	@printf "Stopping configuration ${name}...\n"
-	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env down
-
-re: down
-	@printf "Rebuild configuration ${name}...\n"
-	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env up -d --build
+	@echo "${GREEN}Stopping and removing containers...${RESET}"
+	@docker-compose -f ./srcs/docker-compose.yml down --remove-orphans
 
 clean: down
-	@printf "Cleaning configuration ${name}...\n"
-	@docker system prune -a
-	@sudo rm -rf ~/data/wordpress/*
-	@sudo rm -rf ~/data/mariadb/*
+	@echo "${YELLOW}Removing all images, volumes, and orphans...${RESET}"
+	@docker rmi -f $$(docker images -a -q) 2> /dev/null || true
 
-fclean:
-	@printf "Total clean of all configurations docker\n"
-	@docker stop $$(docker ps -qa)
-	@docker system prune --all --force --volumes
-	@docker network prune --force
-	@docker volume prune --force
-	@sudo rm -rf ~/data/wordpress/*
-	@sudo rm -rf ~/data/mariadb/*
+fclean: clean
+	@echo "${RED}Forcibly removing all Docker images and data...${RESET}"
+	@docker-compose -f ./srcs/docker-compose.yml down --rmi all -v --remove-orphans 2>/dev/null || true
+	@sudo rm -rf ~/data/wordpress ~/data/mariadb ~/data 2>/dev/null || true
 
-.PHONY	: all build down re clean fclean
+re: fclean all
+
+.PHONY: all clean fclean re down inception
