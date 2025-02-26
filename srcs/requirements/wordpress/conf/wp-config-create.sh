@@ -34,7 +34,7 @@ if [ ! -f wp-config.php ]; then
         "$WP_USER_LOGIN" \
         "$WP_USER_EMAIL" \
         --user_pass="$WP_USER_PASSWORD" \
-        --role=author \
+        --role=contributor \
         --path="/var/www/html" \
         --allow-root
 else
